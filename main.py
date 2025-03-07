@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import xlwings as xw
+from PyPDF2 import PdfMerger
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
@@ -21,6 +22,8 @@ class WindowClass(QMainWindow, form_class):
         # Connect buttons
         self.fileButton.clicked.connect(self.forFile)
         self.folderButton.clicked.connect(self.forFolder)
+        self.merge_state = self.mergeCheckBox.isChecked()
+        self.mergeCheckBox.stateChanged.connect(self.mergeStateChange)
 
     def forFile(self):
         self.file = self.dialog.getOpenFileName(caption="Select File", filter="Excel Files (*.xls *.xlsx *.xlsm)")
@@ -97,12 +100,43 @@ class WindowClass(QMainWindow, form_class):
                     if sheet.api.Visible == -1 : 
                         sheet.to_pdf(pdf_path)
                         wb.close()
+                        if self.merge_state :
+                            self.pdf_merger = PdfMerger()
+                            self.pdf_merger.append(pdf_path)
                         print(f"✅ Successfully saved: {pdf_path}")
                     else :
                         print(f"🙈 Sheet: {sheet_name} → Status: {sheet.api.Visible}(0=hidden, 2=very hidden)")
                     
                 except Exception as e:
                     print(f"❌ Error converting to PDF: {e}")
+
+    def mergeStateChange(self):
+        self.merge_state = self.mergeCheckBox.isChecked()
+        print(self.merge_state)
+    
+    def mergePdfs(input_folder, output_path):
+        pdf_merger = PdfMerger()
+        
+        # 폴더 내 PDF 파일 리스트 정렬 후 병합
+        pdf_files = sorted([f for f in os.listdir(input_folder) if f.endswith(".pdf")])
+
+        if not pdf_files:
+            print("❌ 병합할 PDF 파일이 없습니다.")
+            return
+
+        print("📂 병합할 파일 목록:")
+        for pdf in pdf_files:
+            pdf_path = os.path.join(input_folder, pdf)
+            print(f"   ➡️ {pdf}")
+            pdf_merger.append(pdf_path)
+
+        # 병합된 PDF 저장
+        pdf_merger.write(output_path)
+        pdf_merger.close()
+        
+        print(f"✅ PDF 병합 완료: {output_path}")
+
+
                     
 if __name__ == '__main__':
     app = QApplication(sys.argv)
