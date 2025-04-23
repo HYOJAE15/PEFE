@@ -125,8 +125,8 @@ class WindowClass(QMainWindow, form_class):
                 wb = app.books.open(file_path)
                 for idx, sheet_name in enumerate(sheet_names):
                     sheet = wb.sheets[sheet_name]
-                    # PDF 저장 경로: 각각 output/파일명/파일명_idx_시트.pdf
-                    dest_dir = os.path.join(out_folder, base_name)
+                    # PDF 저장 경로: 각각 output/파일명/Sheets/파일명_idx_시트.pdf
+                    dest_dir = os.path.join(out_folder, base_name, 'Sheets')
                     os.makedirs(dest_dir, exist_ok=True)
                     pdf_path = os.path.join(dest_dir, f"{base_name}_{idx}_{sheet_name}.pdf")
 
@@ -152,7 +152,9 @@ class WindowClass(QMainWindow, form_class):
 
             # 병합
             if pdf_list:
-                merged_path = os.path.join(out_folder, base_name, f"{base_name}_merged.pdf")
+                merged_dir = os.path.join(out_folder, base_name, "Merged")
+                os.makedirs(merged_dir, exist_ok=True)
+                merged_path = os.path.join(merged_dir, f"{base_name}_merged.pdf")
                 self.mergePdfs(pdf_list, merged_path)
 
         # ── 4) 마무리 ────────────────────────────────────
