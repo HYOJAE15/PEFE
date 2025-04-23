@@ -6,9 +6,16 @@ from PyPDF2 import PdfMerger
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
-from utils import resource_path, is_file_open
+from src.utils.utils import resource_path, is_file_open
 
-form = resource_path('PE_main.ui')
+# 현재 utils.py (__file__) 기준으로 한 단계 위(src/)로 올라간 뒤 interface 폴더로
+ui_relative = os.path.join('..', 'interface', 'PE_main.ui')
+form = resource_path(ui_relative)
+
+# 또는 절대 경로로 바로 지정하고 싶다면 resource_path를 쓰지 않고:
+# script_dir = os.path.dirname(os.path.abspath(__file__))  # 만약 mian_L.py가 src/에 있으면
+# form = os.path.join(script_dir, 'interface', 'PE_main.ui')
+
 form_class = uic.loadUiType(form)[0]
 
 class WindowClass(QMainWindow, form_class):
