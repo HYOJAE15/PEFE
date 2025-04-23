@@ -9,17 +9,12 @@ from PyPDF2 import PdfMerger
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt
 
 from src.utils.utils import resource_path, is_file_open
 
-# 코드
-# 현재 utils.py (__file__) 기준으로 한 단계 위(src/)로 올라간 뒤 interface 폴더로
-ui_relative = os.path.join('..', 'interface', 'PE_main.ui')
-form = resource_path(ui_relative)
-
-# # EXE
-# form = resource_path(os.path.join('interface', 'PE_main.ui'))
-
+# UI 로드
+form = resource_path(os.path.join('..', 'interface', 'PE_main.ui'))
 form_class = uic.loadUiType(form)[0]
 
 class WindowClass(QMainWindow, form_class):
@@ -27,18 +22,9 @@ class WindowClass(QMainWindow, form_class):
         super().__init__()
         self.setupUi(self)
 
-        # ─── 아이콘 설정 ────────────────────────────────────
-        
-        # 코드
-        # utils.resource_path 기준으로 icons 폴더를 찾아서 QIcon에 전달
-        icon_rel = os.path.join('..', '..', 'icons', 'cikw.png')
-
-        # # EXE
-        # icon_rel = os.path.join('icons', 'cikw.png')
-
-        icon_path = resource_path(icon_rel)
+        # 아이콘 설정
+        icon_path = resource_path(os.path.join('..', '..', 'icons', 'cikw.png'))
         self.setWindowIcon(QIcon(icon_path))
-        # ───────────────────────────────────────────────────
 
         self.dialog = QFileDialog()
 
@@ -47,26 +33,21 @@ class WindowClass(QMainWindow, form_class):
         self.folderButton.clicked.connect(self.forFolder)
 
     def forFile(self):
-        """ 필요 시 단일 파일만 선택해서 처리할 경우 사용 """
         self.file = self.dialog.getOpenFileName(
-            caption="Select File", 
+            caption="Select File",
             filter="Excel Files (*.xls *.xlsx *.xlsm)"
         )
         print(f"Selected File: {self.file[0]}")
 
     def forFolder(self):
-        """ 폴더를 선택해 내부의 모든 Excel 파일 처리 """
         self.folder = self.dialog.getExistingDirectory(caption="Select Directory")
-
         if not self.folder:
             print("⚠️ No folder selected.")
             return
 
-        # 아웃풋 폴더 생성
         self.out_folder = os.path.join(self.folder, "output")
         os.makedirs(self.out_folder, exist_ok=True)
 
-        # 폴더 내부 Excel 파일 처리
         self.processExcelFiles(self.folder, self.out_folder)
 
     def processExcelFiles(self, folder_path, out_folder):
@@ -75,39 +56,50 @@ class WindowClass(QMainWindow, form_class):
             os.path.join(folder_path, f) for f in os.listdir(folder_path)
             if f.lower().endswith(valid_extensions) and not f.startswith("~$")
         ]
-
         if not excel_files:
             print("⚠️ 유효한 Excel 파일이 없습니다.")
             return
 
-        print(f"유효한 Excel 파일 목록: {excel_files}")
+        total_files = len(excel_files)
+        progress = QProgressDialog("PDF 변환 중...", "취소", 0, total_files, self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setValue(0)
 
-        # (1) App 객체를 한 번만 생성 → 성능 개선
         app = xw.App(visible=False)
-        # 속도 최적화: 화면 업데이트, 경고, 자동계산, 이벤트 비활성화
         app.screen_updating = False
         app.display_alerts = False
         app.api.Calculation = Calculation.xlCalculationManual
         app.api.EnableEvents = False
 
+        cancelled = False
         try:
-            for file_path in excel_files:
+            for idx_file, file_path in enumerate(excel_files):
+                if progress.wasCanceled():
+                    cancelled = True
+                    print("🚫 사용자가 작업을 취소했습니다.")
+                    break
+
                 if is_file_open(file_path):
                     print(f"⚠️ 열려있는 파일은 스킵: {file_path}")
+                    progress.setValue(idx_file + 1)
                     continue
 
                 base_name = os.path.splitext(os.path.basename(file_path))[0]
                 pdf_list = []
+
+                # 각 파일별 폴더 생성
+                file_out = os.path.join(out_folder, base_name)
+                os.makedirs(file_out, exist_ok=True)
 
                 try:
                     wb = app.books.open(file_path)
                     sheet_names = [s.name for s in wb.sheets]
                     print(f"처리 대상: {os.path.basename(file_path)} → 시트: {sheet_names}")
 
-                    for idx, sheet_name in enumerate(sheet_names):
+                    for idx_sheet, sheet_name in enumerate(sheet_names):
                         sheet = wb.sheets[sheet_name]
-                        pdf_filename = f"{base_name}_{idx}_{sheet_name}.pdf"
-                        pdf_path = os.path.join(out_folder, pdf_filename)
+                        pdf_filename = f"{base_name}_{idx_sheet}_{sheet_name}.pdf"
+                        pdf_path = os.path.join(file_out, pdf_filename)
 
                         if sheet.api.Visible == -1:
                             try:
@@ -116,7 +108,6 @@ class WindowClass(QMainWindow, form_class):
                                 print(f"✅ PDF 생성 완료: {pdf_path}")
                             except Exception as e:
                                 print(f"⚠️ PDF 생성 중 오류 ({sheet_name}): {e}")
-                                # 오류 발생해도 다음 시트로 계속 진행
                                 continue
                         else:
                             print(f"🙈 숨김 시트 스킵: {sheet_name}")
@@ -124,18 +115,23 @@ class WindowClass(QMainWindow, form_class):
                     wb.close()
                 except Exception as e:
                     print(f"❌ Excel 처리 중 오류 ({base_name}): {e}")
-                    continue  # 다음 파일로 이동
+                    progress.setValue(idx_file + 1)
+                    continue
 
-                # 파일 단위로 PDF 병합
+                # PDF 병합
                 if pdf_list:
-                    merged_pdf_name = f"{base_name}_merged.pdf"
-                    merged_pdf_path = os.path.join(out_folder, merged_pdf_name)
-                    self.mergePdfs(pdf_list, merged_pdf_path)
+                    merged_pdf = os.path.join(file_out, f"{base_name}_merged.pdf")
+                    self.mergePdfs(pdf_list, merged_pdf)
                 else:
                     print(f"⚠️ 변환된 PDF가 없어 병합하지 않음: {base_name}")
 
+                progress.setValue(idx_file + 1)
         finally:
             app.quit()
+            progress.close()
+
+        if not cancelled:
+            QMessageBox.information(self, "완료", "모든 PDF 변환이 완료되었습니다.")
 
     def mergePdfs(self, pdf_list, output_path):
         if not pdf_list:
@@ -143,7 +139,6 @@ class WindowClass(QMainWindow, form_class):
             return
 
         merger = PdfMerger()
-        print(f"📂 병합할 PDF 총 {len(pdf_list)}개…")
         for pdf in pdf_list:
             merger.append(pdf)
         merger.write(output_path)
