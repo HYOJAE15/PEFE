@@ -1,16 +1,21 @@
 import os
 import sys
+
 import xlwings as xw
 from xlwings.constants import Calculation
+
 from PyPDF2 import PdfMerger
+
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from PyQt5.QtGui import QIcon
 
 from src.utils.utils import resource_path, is_file_open
 
-# 현재 utils.py (__file__) 기준으로 한 단계 위(src/)로 올라간 뒤 interface 폴더로
-ui_relative = os.path.join('..', 'interface', 'PE_main.ui')
-form = resource_path(ui_relative)
+# # 현재 utils.py (__file__) 기준으로 한 단계 위(src/)로 올라간 뒤 interface 폴더로
+# ui_relative = os.path.join('..', 'interface', 'PE_main.ui')
+# form = resource_path(ui_relative)
+form = resource_path(os.path.join('interface', 'PE_main.ui'))
 
 # 또는 절대 경로로 바로 지정하고 싶다면 resource_path를 쓰지 않고:
 # script_dir = os.path.dirname(os.path.abspath(__file__))  # 만약 mian_L.py가 src/에 있으면
@@ -22,6 +27,13 @@ class WindowClass(QMainWindow, form_class):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+
+        # ─── 아이콘 설정 ────────────────────────────────────
+        # utils.resource_path 기준으로 icons 폴더를 찾아서 QIcon에 전달
+        icon_rel = os.path.join('..', '..', 'icons', 'PEFE.png')
+        icon_path = resource_path(icon_rel)
+        self.setWindowIcon(QIcon(icon_path))
+        # ───────────────────────────────────────────────────
 
         self.dialog = QFileDialog()
 
