@@ -133,11 +133,27 @@
      </widget>
     </item>
     <item>
-      <widget class="QLabel" name="danceLabel">
-        <property name="minimumSize"><size><width>100</width><height>100</height></size></property>
-        <property name="alignment"><set>Qt::AlignCenter</set></property>
-        <property name="visible"><bool>false</bool></property>
-      </widget>
+     <widget class="QLabel" name="danceLabel">
+      <property name="minimumSize">
+       <size>
+        <width>656</width>
+        <height>368</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>656</width>
+        <height>368</height>
+       </size>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <!-- 초기에는 숨김 -->
+      <property name="visible">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <spacer name="verticalSpacerMiddle">
