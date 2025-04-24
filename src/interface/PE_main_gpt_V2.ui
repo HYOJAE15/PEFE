@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>450</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PDF Extractor</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <!-- 타이틀 -->
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <property name="text">
+       <string>PDF Extractor for Excel Files</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>14</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+     </widget>
+    </item>
+    <!-- 버튼 -->
+    <item>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <widget class="QPushButton" name="fileButton">
+        <property name="text">
+         <string>Select Excel File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="folderButton">
+        <property name="text">
+         <string>Select Folder</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <!-- 작업 순서 -->
+    <item>
+     <widget class="QGroupBox" name="sequenceGroup">
+      <property name="title">
+       <string>작업 순서</string>
+      </property>
+      <layout class="QVBoxLayout" name="sequenceLayout">
+       <item>
+        <widget class="QTextEdit" name="sequenceText">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- 참고 사항 -->
+    <item>
+     <widget class="QGroupBox" name="notesGroup">
+      <property name="title">
+       <string>참고 사항</string>
+      </property>
+      <layout class="QVBoxLayout" name="notesLayout">
+       <item>
+        <widget class="QTextEdit" name="notesText">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <!-- 메뉴바 -->
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <!-- 상태바 -->
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x><y>0</y><width>650</width><height>550</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PEFE – PDF Extractor for Excel Files</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true">
+      QWidget { background-color: #FFFFFF; }
+      QLabel#titleLabel { color: #333333; }
+      QLabel#subTitleLabel, QLabel#instructionLabel { color: #777777; }
+    </string>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,0">
+    <!-- 제목 -->
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <property name="text"><string>PEFE</string></property>
+      <property name="alignment"><set>Qt::AlignCenter</set></property>
+      <property name="font">
+       <font><family>Arial</family><pointsize>20</pointsize><bold>true</bold></font>
+      </property>
+     </widget>
+    </item>
+    <!-- 소제목 -->
+    <item>
+     <widget class="QLabel" name="subTitleLabel">
+      <property name="text"><string>PDF Extractor for Excel Files</string></property>
+      <property name="alignment"><set>Qt::AlignCenter</set></property>
+      <property name="font">
+       <font><family>Arial</family><pointsize>11</pointsize></font>
+      </property>
+     </widget>
+    </item>
+    <!-- 지침 문구 -->
+    <item>
+     <widget class="QLabel" name="instructionLabel">
+      <property name="text">
+       <string>Select a folder containing Excel files to extract PDFs</string>
+      </property>
+      <property name="alignment"><set>Qt::AlignCenter</set></property>
+      <property name="font">
+       <font><family>Arial</family><pointsize>10</pointsize><italic>true</italic></font>
+      </property>
+     </widget>
+    </item>
+    <!-- 상단 여백 -->
+    <item>
+     <spacer name="verticalSpacerTop">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeHint"><size><width>20</width><height>30</height></size></property>
+     </spacer>
+    </item>
+    <!-- Select Folder 버튼 -->
+    <item>
+     <widget class="QPushButton" name="folderButton">
+      <property name="text"><string>Select Folder</string></property>
+      <property name="minimumSize"><size><width>0</width><height>50</height></size></property>
+      <property name="font">
+       <font><family>Arial</family><pointsize>12</pointsize><bold>true</bold></font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">
+         QPushButton {
+           background-color: qlineargradient(
+             spread:pad, x1:0,y1:0, x2:1,y2:0,
+             stop:0 #3A8FB7, stop:1 #186F9A
+           );
+           color: white;
+           border-radius: 8px;
+           padding-left: 20px;
+           padding-right: 20px;
+         }
+         QPushButton:hover { background-color: #2E7EA5; }
+         QPushButton:pressed { background-color: #155A80; }
+       </string>
+      </property>
+     </widget>
+    </item>
+    <!-- 중간 여백 -->
+    <item>
+     <spacer name="verticalSpacerMiddle">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeHint"><size><width>20</width><height>20</height></size></property>
+     </spacer>
+    </item>
+    <!-- 참고 사항 그룹박스 -->
+    <item>
+     <widget class="QGroupBox" name="notesGroup">
+      <property name="title"><string>참고 사항</string></property>
+      <layout class="QVBoxLayout" name="notesLayout">
+       <item>
+        <widget class="QTextEdit" name="notesText">
+         <property name="readOnly"><bool>false</bool></property>
+         <property name="placeholderText">
+          <string>여기에 참고 사항을 입력하세요...</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <!-- 하단 여백 -->
+    <item>
+     <spacer name="verticalSpacerBottom">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeHint"><size><width>20</width><height>20</height></size></property>
+     </spacer>
+    </item>
+    <!-- 상태 및 Merge 체크박스 행 -->
+    <item>
+     <layout class="QHBoxLayout" name="bottomLayout">
+      <!-- 상태 레이블 -->
+      <item>
+       <widget class="QLabel" name="statusLabel">
+        <property name="text"><string>Ready</string></property>
+        <property name="font">
+         <font><family>Arial</family><pointsize>10</pointsize></font>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <!-- Merge 체크박스 -->
+      <item>
+       <widget class="QCheckBox" name="mergeCheckBox">
+        <property name="text"><string>Merge</string></property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar"/>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

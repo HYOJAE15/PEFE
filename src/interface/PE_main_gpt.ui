@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x><y>0</y><width>400</width><height>200</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PDF Extractor</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <!-- 타이틀 -->
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <property name="text">
+       <string>PDF Extractor for Excel Files</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+     </widget>
+    </item>
+    <!-- 버튼 영역 -->
+    <item>
+     <layout class="QHBoxLayout" name="buttonLayout">
+      <item>
+       <widget class="QPushButton" name="fileButton">
+        <property name="text">
+         <string>Select Excel File</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="folderButton">
+        <property name="text">
+         <string>Select Folder</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <!-- 진행 바 -->
+    <item>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <!-- 상태 레이블 -->
+    <item>
+     <widget class="QLabel" name="statusLabel">
+      <property name="text">
+       <string>Ready</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <!-- 메뉴바/상태바 (필요시 추가 메뉴만 구성) -->
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect><x>0</x><y>0</y><width>400</width><height>21</height></rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
