@@ -15,12 +15,16 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 
 from src.utils.utils import resource_path, is_file_open
 
-# ────────────────────────────────────────────────────
 # 1) UI 로드
-ui_path = resource_path(os.path.join('..', 'interface', 'PE_main_gpt_v7.ui'))
+# # src
+# ui_path = resource_path(os.path.join('..', 'interface', 'PE_main_gpt_V7.ui'))
+
+# exe
+ui_path = resource_path(os.path.join('interface', 'PE_main_gpt_V7.ui'))
+
 FormClass, _ = uic.loadUiType(ui_path)
 
-# 2) Worker 쓰레드 정의
+# 2) 변환 작업을 백그라운드에서 수행할 Worker
 class ConverterWorker(QThread):
     progress = pyqtSignal(int)
     status   = pyqtSignal(str)
@@ -33,7 +37,6 @@ class ConverterWorker(QThread):
         self.do_merge    = do_merge
 
     def run(self):
-        # Excel 앱 초기화 (속도최적화)
         app = xw.App(visible=False)
         app.screen_updating = False
         app.display_alerts  = False
@@ -53,10 +56,9 @@ class ConverterWorker(QThread):
                 for idx, name in enumerate(sheets, start=1):
                     self.status.emit(f"{base} – 시트 {idx}/{len(sheets)}: {name}")
 
-                    # 저장 폴더
-                    sheets_dir = os.path.join(self.out_folder, base, 'Sheets')
-                    os.makedirs(sheets_dir, exist_ok=True)
-                    pdf_path = os.path.join(sheets_dir, f"{base}_{idx-1}_{name}.pdf")
+                    dest = os.path.join(self.out_folder, base, 'Sheets')
+                    os.makedirs(dest, exist_ok=True)
+                    pdf_path = os.path.join(dest, f"{base}_{idx-1}_{name}.pdf")
 
                     if wb.sheets[name].api.Visible == -1:
                         try:
@@ -65,19 +67,17 @@ class ConverterWorker(QThread):
                         except Exception as e:
                             print(f"⚠️ PDF 변환 오류 ({name}): {e}")
 
-                    # 진행도 업데이트
                     processed += 1
                     self.progress.emit(processed)
 
                 wb.close()
             except Exception as e:
                 print(f"❌ 파일 처리 실패 ({base}): {e}")
-                # 건너뛸 시트만큼 처리도 증가시켜서 진행도 맞추기
+                # 남은 시트 건너뛰기
                 processed += len(sheets)
                 self.progress.emit(processed)
                 continue
 
-            # 병합 옵션 체크
             if self.do_merge and pdf_list:
                 merge_dir = os.path.join(self.out_folder, base, 'Merged')
                 os.makedirs(merge_dir, exist_ok=True)
@@ -99,6 +99,7 @@ class ConverterWorker(QThread):
         merger.write(output_path)
         merger.close()
 
+
 # 3) 메인 윈도우
 class WindowClass(QMainWindow, FormClass):
     def __init__(self):
@@ -106,20 +107,30 @@ class WindowClass(QMainWindow, FormClass):
         self.setupUi(self)
 
         # 아이콘
-        icon_path = resource_path(os.path.join('..', '..', 'icons','cikw.png'))
+        # # src
+        # icon_path = resource_path(os.path.join('..', '..', 'icons','cikw.png'))
+
+        # exe
+        icon_path = resource_path(os.path.join('icons','cikw.png'))
+
         self.setWindowIcon(QIcon(icon_path))
 
-        # 시스템 트레이 아이콘 (완료 알림용)
+        # 트레이 알림용 아이콘
         self.tray = QSystemTrayIcon(QIcon(icon_path), self)
         self.tray.show()
 
-        # Chiikawa GIF 준비
-        gif_path = resource_path(os.path.join('..', '..', 'icons','cikw.gif'))
+        # Chiikawa GIF 설정
+        # # src
+        # gif_path = resource_path(os.path.join('..', '..', 'icons','cikw.gif'))
+        
+        # exe
+        gif_path = resource_path(os.path.join('icons','cikw.gif'))
+        
         self.danceMovie = QMovie(gif_path)
         self.danceLabel.setMovie(self.danceMovie)
         self.danceLabel.setVisible(False)
 
-        # 버튼 시그널
+        # 버튼 연결
         self.folderButton.clicked.connect(self.onSelectFolder)
 
     def onSelectFolder(self):
@@ -136,7 +147,7 @@ class WindowClass(QMainWindow, FormClass):
         out_folder = os.path.join(folder, "output")
         os.makedirs(out_folder, exist_ok=True)
 
-        # 엑셀 파일+시트 목록 수집
+        # 엑셀 파일 목록 & 시트 수집
         valid_ext = ('.xls','.xlsx','.xlsm')
         excel_files = [
             os.path.join(folder,f) for f in os.listdir(folder)
@@ -144,7 +155,6 @@ class WindowClass(QMainWindow, FormClass):
         ]
         file_sheets = []
         total_sheets = 0
-        # 임시 Excel 앱으로 시트만 조회
         tmp_app = xw.App(visible=False)
         tmp_app.screen_updating = False
         tmp_app.display_alerts  = False
@@ -165,16 +175,21 @@ class WindowClass(QMainWindow, FormClass):
             self.statusLabel.setText("처리할 시트가 없습니다")
             return
 
-        # 프로그래스 다이얼로그 세팅
+        # 4) 메인 윈도우 내 프로그래스바 위치 설정 (우측 상단)
         self.progressDialog = QProgressDialog("PDF 변환 중…", None, 0, total_sheets, self)
         self.progressDialog.setWindowTitle("진행 상태")
         self.progressDialog.setWindowModality(Qt.WindowModal)
         self.progressDialog.setCancelButton(None)
-        self.progressDialog.setWindowFlags(
-            self.progressDialog.windowFlags() | Qt.WindowStaysOnTopHint
-        )
+        # **항상 위 플래그 제거** (진행 중에는 다른 창 가리지 않음)
+        # self.progressDialog.setWindowFlags(self.progressDialog.windowFlags() | Qt.WindowStaysOnTopHint)
+        self.progressDialog.show()
+        # 메인 윈도우의 우측 상단으로 이동
+        dlg_size = self.progressDialog.sizeHint()
+        x = self.x() + self.width() - dlg_size.width() - 20
+        y = self.y() + 20
+        self.progressDialog.move(x, y)
 
-        # GIF 애니메이션 시작
+        # 5) GIF 애니메이션 시작
         self.danceLabel.setVisible(True)
         self.danceMovie.start()
 
@@ -186,35 +201,36 @@ class WindowClass(QMainWindow, FormClass):
         self.worker.finished.connect(self.onFinished)
         self.worker.start()
 
-        self.progressDialog.show()
-
     def onFinished(self):
         # GIF 정지
         self.danceMovie.stop()
         self.danceLabel.setVisible(False)
         self.progressDialog.close()
 
-        # 상태 표시
+        # 최종 상태 표시
         self.statusLabel.setText("모든 작업이 완료되었습니다")
 
-        # 시스템 트레이 알림
+        # 트레이 알림
         self.tray.showMessage(
-            "PEFE", 
-            "모든 PDF 추출 작업이 완료되었습니다",
+            "PEFE 완료",
+            "PDF 추출 작업이 완료되었습니다!",
             QSystemTrayIcon.Information,
             5000
         )
 
-        # 항상 위 메시지 박스
-        msg = QMessageBox(
-            QMessageBox.Information,
-            "완료",
-            "모든 PDF 추출 작업이 완료되었습니다",
-            QMessageBox.Ok,
-            self
-        )
+        # 항상 위 메시지 박스 + 스타일 강력 강조
+        msg = QMessageBox(self)
+        msg.setWindowTitle("작업 완료 🎉")
+        msg.setText("🎉 모든 PDF 추출 작업이 완료되었습니다! 🎉")
+        msg.setIcon(QMessageBox.Information)
+        msg.setStandardButtons(QMessageBox.Ok)
         msg.setWindowFlags(msg.windowFlags() | Qt.WindowStaysOnTopHint)
+        msg.setStyleSheet(
+            "QLabel{min-width:250px; font-size:14pt; color:#186F9A;} "
+            "QPushButton{min-width:80px; font-size:12pt; padding:8px;}"
+        )
         msg.exec_()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

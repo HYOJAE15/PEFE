@@ -10,3 +10,4 @@
 *.pkg
 main/
 dist/
+.vscode/
