@@ -16,13 +16,9 @@ from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from src.utils.utils import resource_path, is_file_open
 
 # 1) UI 로드
-# # src
-# ui_path = resource_path(os.path.join('..', 'interface', 'PE_main_gpt_V7.ui'))
-
-# exe
-ui_path = resource_path(os.path.join('..', 'interface', 'PE_main_gpt_V7.ui'))
-
+ui_path = resource_path(os.path.join('..', 'interface', 'PE_main_gpt_V8.ui'))
 FormClass, _ = uic.loadUiType(ui_path)
+
 
 # 2) 변환 작업을 백그라운드에서 수행할 Worker
 class ConverterWorker(QThread):
@@ -30,11 +26,12 @@ class ConverterWorker(QThread):
     status   = pyqtSignal(str)
     finished = pyqtSignal()
 
-    def __init__(self, file_sheets, out_folder, do_merge):
+    def __init__(self, file_sheets, out_folder, do_merge, do_split):
         super().__init__()
         self.file_sheets = file_sheets
         self.out_folder  = out_folder
         self.do_merge    = do_merge
+        self.do_split    = do_split  # 시트별 저장 On/Off 옵션 추가
 
     def run(self):
         app = xw.App(visible=False)
@@ -44,7 +41,6 @@ class ConverterWorker(QThread):
         app.api.EnableEvents = False
 
         processed = 0
-        total = sum(len(s) for _, s in self.file_sheets)
 
         for file_path, sheets in self.file_sheets:
             base = os.path.splitext(os.path.basename(file_path))[0]
@@ -53,31 +49,49 @@ class ConverterWorker(QThread):
             pdf_list = []
             try:
                 wb = app.books.open(file_path)
-                for idx, name in enumerate(sheets, start=1):
-                    self.status.emit(f"{base} – 시트 {idx}/{len(sheets)}: {name}")
 
+                # --- [A] 시트별 개별 저장 (do_split = True) ---
+                if self.do_split:
                     dest = os.path.join(self.out_folder, base, 'Sheets')
                     os.makedirs(dest, exist_ok=True)
-                    pdf_path = os.path.join(dest, f"{base}_{idx-1}_{name}.pdf")
 
-                    if wb.sheets[name].api.Visible == -1:
-                        try:
-                            wb.sheets[name].to_pdf(pdf_path)
-                            pdf_list.append(pdf_path)
-                        except Exception as e:
-                            print(f"⚠️ PDF 변환 오류 ({name}): {e}")
+                    for idx, name in enumerate(sheets, start=1):
+                        self.status.emit(f"{base} – 시트 {idx}/{len(sheets)}: {name}")
+                        pdf_path = os.path.join(dest, f"{base}_{idx-1}_{name}.pdf")
 
-                    processed += 1
+                        if wb.sheets[name].api.Visible == -1:
+                            try:
+                                wb.sheets[name].to_pdf(pdf_path)
+                                pdf_list.append(pdf_path)
+                            except Exception as e:
+                                print(f"⚠️ PDF 변환 오류 ({name}): {e}")
+
+                        processed += 1
+                        self.progress.emit(processed)
+
+                # --- [B] 시트별 개별 저장 미사용 (do_split = False) ---
+                else:
+                    self.status.emit(f"{base} – 전체 파일 변환 중")
+                    # 통합 저장용 임시 디렉토리
+                    temp_dir = os.path.join(self.out_folder, base, 'Temp')
+                    os.makedirs(temp_dir, exist_ok=True)
+                    full_pdf_path = os.path.join(temp_dir, f"{base}_full.pdf")
+
+                    wb.to_pdf(full_pdf_path)
+                    pdf_list.append(full_pdf_path)
+
+                    processed += len(sheets)
                     self.progress.emit(processed)
 
                 wb.close()
+
             except Exception as e:
                 print(f"❌ 파일 처리 실패 ({base}): {e}")
-                # 남은 시트 건너뛰기
                 processed += len(sheets)
                 self.progress.emit(processed)
                 continue
 
+            # --- [C] 병합 처리 (do_merge = True) ---
             if self.do_merge and pdf_list:
                 merge_dir = os.path.join(self.out_folder, base, 'Merged')
                 os.makedirs(merge_dir, exist_ok=True)
@@ -106,13 +120,8 @@ class WindowClass(QMainWindow, FormClass):
         super().__init__()
         self.setupUi(self)
 
-        # 아이콘
-        # src
-        icon_path = resource_path(os.path.join('..', '..', 'icons','cikw.png'))
-
-        # # exe
-        # icon_path = resource_path(os.path.join('icons','cikw.png'))
-
+        # 아이콘 설정
+        icon_path = resource_path(os.path.join('..', '..', 'icons', 'cikw.png'))
         self.setWindowIcon(QIcon(icon_path))
 
         # 트레이 알림용 아이콘
@@ -120,12 +129,7 @@ class WindowClass(QMainWindow, FormClass):
         self.tray.show()
 
         # Chiikawa GIF 설정
-        # src
-        gif_path = resource_path(os.path.join('..', '..', 'icons','cikw.gif'))
-        
-        # # exe
-        # gif_path = resource_path(os.path.join('icons','cikw.gif'))
-        
+        gif_path = resource_path(os.path.join('..', '..', 'icons', 'cikw.gif'))
         self.danceMovie = QMovie(gif_path)
         self.danceLabel.setMovie(self.danceMovie)
         self.danceLabel.setVisible(False)
@@ -148,9 +152,9 @@ class WindowClass(QMainWindow, FormClass):
         os.makedirs(out_folder, exist_ok=True)
 
         # 엑셀 파일 목록 & 시트 수집
-        valid_ext = ('.xls','.xlsx','.xlsm')
+        valid_ext = ('.xls', '.xlsx', '.xlsm')
         excel_files = [
-            os.path.join(folder,f) for f in os.listdir(folder)
+            os.path.join(folder, f) for f in os.listdir(folder)
             if f.lower().endswith(valid_ext) and not f.startswith("~$")
         ]
         file_sheets = []
@@ -167,7 +171,7 @@ class WindowClass(QMainWindow, FormClass):
             wb = tmp_app.books.open(fp)
             names = [s.name for s in wb.sheets]
             wb.close()
-            file_sheets.append((fp,names))
+            file_sheets.append((fp, names))
             total_sheets += len(names)
         tmp_app.quit()
 
@@ -175,27 +179,32 @@ class WindowClass(QMainWindow, FormClass):
             self.statusLabel.setText("처리할 시트가 없습니다")
             return
 
-        # 4) 메인 윈도우 내 프로그래스바 위치 설정 (우측 상단)
+        # 프로그래스바 설정
         self.progressDialog = QProgressDialog("PDF 변환 중…", None, 0, total_sheets, self)
         self.progressDialog.setWindowTitle("진행 상태")
         self.progressDialog.setWindowModality(Qt.WindowModal)
         self.progressDialog.setCancelButton(None)
-        # **항상 위 플래그 제거** (진행 중에는 다른 창 가리지 않음)
-        # self.progressDialog.setWindowFlags(self.progressDialog.windowFlags() | Qt.WindowStaysOnTopHint)
         self.progressDialog.show()
-        # 메인 윈도우의 우측 상단으로 이동
+
+        # 위치 이동
         dlg_size = self.progressDialog.sizeHint()
         x = self.x() + self.width() - dlg_size.width() - 20
         y = self.y() + 20
         self.progressDialog.move(x, y)
 
-        # 5) GIF 애니메이션 시작
+        # GIF 애니메이션 시작
         self.danceLabel.setVisible(True)
         self.danceMovie.start()
 
-        # Worker 실행
+        # UI 요소 상태 가져오기 (.ui 파일 내 splitCheckBox 이름 기준)
         do_merge = self.mergeCheckBox.isChecked()
-        self.worker = ConverterWorker(file_sheets, out_folder, do_merge)
+        
+        # splitCheckBox가 체크박스 형태인 경우 (없으면 기본값 True 설정)
+        do_split = getattr(self, 'splitCheckBox', None)
+        do_split_val = do_split.isChecked() if do_split else True
+
+        # Worker 실행
+        self.worker = ConverterWorker(file_sheets, out_folder, do_merge, do_split_val)
         self.worker.progress.connect(self.progressDialog.setValue)
         self.worker.status.connect(self.statusLabel.setText)
         self.worker.finished.connect(self.onFinished)
@@ -218,7 +227,7 @@ class WindowClass(QMainWindow, FormClass):
             5000
         )
 
-        # 항상 위 메시지 박스 + 스타일 강력 강조
+        # 알림 메시지 박스
         msg = QMessageBox(self)
         msg.setWindowTitle("작업 완료 🎉")
         msg.setText("🎉 모든 PDF 추출 작업이 완료되었습니다! 🎉")

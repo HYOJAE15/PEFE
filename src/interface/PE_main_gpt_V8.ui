@@ -74,6 +74,19 @@
       </property>
      </widget>
     </item>
+    <item row="6" column="1">
+     <spacer name="verticalSpacerTop">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>30</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
     <item row="7" column="0" colspan="2">
      <widget class="QPushButton" name="folderButton">
       <property name="minimumSize">
@@ -121,6 +134,19 @@
       </property>
      </widget>
     </item>
+    <item row="10" column="1">
+     <spacer name="verticalSpacerMiddle">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
     <item row="11" column="0" colspan="2">
      <widget class="QGroupBox" name="notesGroup">
       <property name="title">
@@ -167,8 +193,29 @@
       </item>
       <item>
        <widget class="QCheckBox" name="splitCheckBox">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="sizeIncrement">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="baseSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
         <property name="text">
-         <string>split</string>
+         <string>Split</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -194,6 +241,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="mergeCheckBox">
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
         <property name="text">
          <string>Merge</string>
         </property>
@@ -204,38 +254,12 @@
       </item>
      </layout>
     </item>
-    <item row="6" column="1">
-     <spacer name="verticalSpacerTop">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>30</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="10" column="1">
-     <spacer name="verticalSpacerMiddle">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
    </layout>
    <widget class="QLabel" name="danceLabel">
     <property name="geometry">
      <rect>
-      <x>0</x>
-      <y>0</y>
+      <x>9</x>
+      <y>9</y>
       <width>656</width>
       <height>368</height>
      </rect>
@@ -253,7 +277,7 @@
      </size>
     </property>
     <property name="visible">
-     <bool>false</bool>
+     <bool>true</bool>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
